@@ -64,3 +64,17 @@ st.dataframe(shipment_matrix)
 total_cost = value(model.objective)
 st.markdown(f"### Total Delivery Cost: £{total_cost:,.2f}")
 
+# Mathematical explanation
+st.markdown("### 📐 Mathematical Formulation")
+
+st.latex(r"\text{Minimize:} \quad Z = \sum_{i=1}^{3} \sum_{j=1}^{3} x_{ij} \cdot d_{ij} \cdot 5")
+
+st.markdown("Where:")
+st.markdown("- \( x_{ij} \): number of TVs delivered from depot \( i \) to store \( j \)")
+st.markdown("- \( d_{ij} \): distance in miles from depot \( i \) to store \( j \)")
+st.markdown("- Cost per mile = £5")
+
+st.latex(r"\text{Subject to:}")
+st.latex(r"\sum_{i=1}^{3} x_{ij} = \text{Demand}_j \quad \text{for all stores } j")
+st.latex(r"\sum_{j=1}^{3} x_{ij} \leq \text{Supply}_i \quad \text{for all depots } i")
+st.latex(r"x_{ij} \geq 0 \quad \text{and integer}")
