@@ -1,85 +1,67 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
-from pulp import LpMinimize, LpProblem, LpVariable, lpSum, value
+import pandas as pd
+from scipy.optimize import linprog
 
-st.title("TV Delivery Cost Optimiser")
+st.title("TV Delivery Optimizer (using SciPy)")
 
-st.markdown("### Input Data")
-
-# Distance matrix
-stores = ["Store 1", "Store 2", "Store 3"]
-depots = ["D1", "D2", "D3"]
-
-distance_data = {
-    "Store 1": [22, 27, 36],
-    "Store 2": [33, 30, 20],
-    "Store 3": [40, 20, 25]
-}
-distances = pd.DataFrame(distance_data, index=depots)
-
-# Corrected store capacities and depot supply
-store_demand = {"Store 1": 2000, "Store 2": 3000, "Store 3": 2000}
-depot_supply = {"D1": 2500, "D2": 3100, "D3": 1250}
+st.markdown("## Problem Setup")
 
 cost_per_mile = 5
 
+# Distances in miles from depots (rows) to stores (columns)
+distances = np.array([
+    [22, 33, 40],  # D1 to Stores 1–3
+    [27, 30, 20],  # D2
+    [36, 20, 25],  # D3
+])
 st.write("### Distance Matrix (miles)")
-st.dataframe(distances)
+st.dataframe(pd.DataFrame(distances, index=["D1", "D2", "D3"], columns=["Store 1", "Store 2", "Store 3"]))
 
-st.write("### Maximum Store Capacity")
-st.write(store_demand)
+# Flatten distance matrix and apply cost multiplier
+c = (distances * cost_per_mile).flatten()
 
-st.write("### Depot Supply (must be fully used)")
-st.write(depot_supply)
+# Store capacity constraints (upper bounds)
+store_caps = [2000, 3000, 2000]  # S1, S2, S3
 
-# Linear programming model
-model = LpProblem("TV_Delivery_Optimization", LpMinimize)
+A_store = np.zeros((3, 9))
+for j in range(3):  # for each store
+    for i in range(3):  # for each depot
+        A_store[j, 3*i + j] = 1
+b_store = store_caps
 
-# Decision variables
-x = LpVariable.dicts("x", [(d, s) for d in depots for s in stores], lowBound=0, cat='Integer')
+# Depot supply constraints (equality)
+depot_supply = [2500, 3100, 1250]  # D1, D2, D3
 
-# Objective function
-model += lpSum([x[(d, s)] * distances.loc[d, s] * cost_per_mile for d in depots for s in stores])
+A_depot = np.zeros((3, 9))
+for i in range(3):  # for each depot
+    A_depot[i, 3*i : 3*i+3] = 1
+b_depot = depot_supply
 
-# Constraints
-for s in stores:
-    model += lpSum(x[(d, s)] for d in depots) <= store_demand[s], f"MaxCapacity_{s}"
+# Bounds (x >= 0)
+bounds = [(0, None) for _ in range(9)]
 
-for d in depots:
-    model += lpSum(x[(d, s)] for s in stores) == depot_supply[d], f"ExactSupply_{d}"
+# Solve using SciPy linprog
+res = linprog(
+    c=c,
+    A_ub=A_store,
+    b_ub=b_store,
+    A_eq=A_depot,
+    b_eq=b_depot,
+    bounds=bounds,
+    method="highs"
+)
 
-# Solve
-model.solve()
+st.markdown("## Optimization Results")
 
-# Output results
-st.markdown("### Optimized Shipment Plan")
-shipment_matrix = pd.DataFrame(0, index=depots, columns=stores)
-total_delivered = 0
-for d in depots:
-    for s in stores:
-        value_delivered = int(x[(d, s)].varValue)
-        shipment_matrix.loc[d, s] = value_delivered
-        total_delivered += value_delivered
+if res.success:
+    x = np.round(res.x).astype(int).reshape(3, 3)
+    shipment_df = pd.DataFrame(x, index=["D1", "D2", "D3"], columns=["Store 1", "Store 2", "Store 3"])
+    st.write("### Optimized TV Shipment Plan")
+    st.dataframe(shipment_df)
 
-st.dataframe(shipment_matrix)
+    total_cost = res.fun
+    st.write(f"### Total Delivery Cost: £{total_cost:,.2f}")
 
-total_cost = value(model.objective)
-st.markdown(f"### Total Delivery Cost: £{total_cost:,.2f}")
-st.markdown(f"### Total TVs Delivered: {total_delivered:,}")
-
-# Mathematical explanation
-st.markdown("### 📐 Mathematical Formulation")
-
-st.latex(r"\text{Minimize:} \quad Z = \sum_{i=1}^{3} \sum_{j=1}^{3} x_{ij} \cdot d_{ij} \cdot 5")
-
-st.markdown("Where:")
-st.markdown("- \( x_{ij} \): number of TVs delivered from depot \( i \) to store \( j \)")
-st.markdown("- \( d_{ij} \): distance in miles from depot \( i \) to store \( j \)")
-st.markdown("- Cost per mile = £5")
-
-st.latex(r"\text{Subject to:}")
-st.latex(r"\sum_{i=1}^{3} x_{ij} \leq \text{Capacity}_j \quad \text{for each store } j")
-st.latex(r"\sum_{j=1}^{3} x_{ij} = \text{Supply}_i \quad \text{for each depot } i")
-st.latex(r"x_{ij} \geq 0 \quad \text{and integer}")
-
+else:
+    st.error("Optimization failed: " + res.message)
