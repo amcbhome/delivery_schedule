@@ -67,29 +67,3 @@ st.dataframe(shipment_matrix)
 
 total_cost = value(model.objective)
 st.markdown(f"### Total Delivery Cost: £{total_cost:,.2f}")
-'''
-
-# Create content for requirements.txt
-requirements_txt = '''
-streamlit
-pulp
-pandas
-numpy
-'''
-
-# Create content for README.md
-readme_md = '''
-# TV Delivery Schedule Optimizer
-
-This Streamlit web app uses Linear Programming to optimize the delivery schedule of TVs from depots to stores, minimizing the total transportation cost.
-
-## Features
-
-- Upload or use default depot-store distance matrix
-- Define depot supply and store demand
-- Optimized shipment plan using `pulp` LP solver
-- Total transportation cost calculation
-
-## How to Run
-
-1. Clone this repository:
