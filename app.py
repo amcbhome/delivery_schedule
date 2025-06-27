@@ -18,8 +18,8 @@ distance_data = {
 }
 distances = pd.DataFrame(distance_data, index=depots)
 
-# Maximum demand and depot supply
-store_demand = {"Store 1": 2000, "Store 2": 2850, "Store 3": 2100}
+# Corrected store capacities and depot supply
+store_demand = {"Store 1": 2000, "Store 2": 3000, "Store 3": 2000}
 depot_supply = {"D1": 2500, "D2": 3100, "D3": 1250}
 
 cost_per_mile = 5
@@ -27,7 +27,7 @@ cost_per_mile = 5
 st.write("### Distance Matrix (miles)")
 st.dataframe(distances)
 
-st.write("### Maximum Store Demand")
+st.write("### Maximum Store Capacity")
 st.write(store_demand)
 
 st.write("### Depot Supply (must be fully used)")
@@ -82,3 +82,4 @@ st.latex(r"\text{Subject to:}")
 st.latex(r"\sum_{i=1}^{3} x_{ij} \leq \text{Capacity}_j \quad \text{for each store } j")
 st.latex(r"\sum_{j=1}^{3} x_{ij} = \text{Supply}_i \quad \text{for each depot } i")
 st.latex(r"x_{ij} \geq 0 \quad \text{and integer}")
+
