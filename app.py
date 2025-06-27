@@ -30,7 +30,7 @@ st.dataframe(distances)
 st.write("### Maximum Store Demand")
 st.write(store_demand)
 
-st.write("### Depot Supply")
+st.write("### Depot Supply (must be fully used)")
 st.write(depot_supply)
 
 # Linear programming model
@@ -47,7 +47,7 @@ for s in stores:
     model += lpSum(x[(d, s)] for d in depots) <= store_demand[s], f"MaxCapacity_{s}"
 
 for d in depots:
-    model += lpSum(x[(d, s)] for s in stores) <= depot_supply[d], f"SupplyLimit_{d}"
+    model += lpSum(x[(d, s)] for s in stores) == depot_supply[d], f"ExactSupply_{d}"
 
 # Solve
 model.solve()
@@ -80,5 +80,5 @@ st.markdown("- Cost per mile = £5")
 
 st.latex(r"\text{Subject to:}")
 st.latex(r"\sum_{i=1}^{3} x_{ij} \leq \text{Capacity}_j \quad \text{for each store } j")
-st.latex(r"\sum_{j=1}^{3} x_{ij} \leq \text{Supply}_i \quad \text{for each depot } i")
+st.latex(r"\sum_{j=1}^{3} x_{ij} = \text{Supply}_i \quad \text{for each depot } i")
 st.latex(r"x_{ij} \geq 0 \quad \text{and integer}")
