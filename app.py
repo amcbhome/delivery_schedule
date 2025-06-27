@@ -1,7 +1,3 @@
-from pathlib import Path
-
-# Create content for app.py
-app_py = '''
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -67,3 +63,4 @@ st.dataframe(shipment_matrix)
 
 total_cost = value(model.objective)
 st.markdown(f"### Total Delivery Cost: £{total_cost:,.2f}")
+
