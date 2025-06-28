@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
 st.title("TV Delivery Optimizer")
 
@@ -24,22 +25,6 @@ st.table(pd.DataFrame({"Depot": depot_labels, "TVs Available": depot_supply}))
 
 st.write("**Store capacity constraints:**")
 st.table(pd.DataFrame({"Store": store_labels, "Capacity": store_caps}))
-
-# Bar Chart – Depot TV Supply
-st.markdown("### 📦 Depot TV Supply")
-fig1, ax1 = plt.subplots()
-ax1.bar(depot_labels, depot_supply)
-ax1.set_ylabel("TVs Available")
-ax1.set_title("TVs Available at Each Depot")
-st.pyplot(fig1)
-
-# Bar Chart – Store Capacity
-st.markdown("### 🏬 Store Capacity Limits")
-fig2, ax2 = plt.subplots()
-ax2.bar(store_labels, store_caps, color="orange")
-ax2.set_ylabel("TVs Capacity")
-ax2.set_title("Maximum TVs Each Store Can Accept")
-st.pyplot(fig2)
 
 # Cost per mile
 cost_per_mile = 5
@@ -95,6 +80,40 @@ if res.success:
     total_cost = res.fun
     st.write(f"### Total Delivery Cost: £{total_cost:,.2f}")
 
+    # Sankey Diagram
+    st.markdown("### 🔄 Shipment Flow Diagram (Sankey)")
+
+    labels = depot_labels + store_labels
+    source = []
+    target = []
+    value = []
+
+    for i in range(3):  # depots
+        for j in range(3):  # stores
+            flow = x[i][j]
+            if flow > 0:
+                source.append(i)
+                target.append(3 + j)
+                value.append(flow)
+
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="black", width=0.5),
+            label=labels,
+            color="blue"
+        ),
+        link=dict(
+            source=source,
+            target=target,
+            value=value,
+            color="lightblue"
+        ))])
+
+    fig.update_layout(title_text="TV Shipments: Depot to Store Flow", font_size=12)
+    st.plotly_chart(fig, use_container_width=True)
+
 else:
     st.error("Optimization failed: " + res.message)
 
@@ -113,3 +132,4 @@ with st.expander("📐 Show Linear Programming Model"):
 # Constraint Check
 with st.expander("📦 Store Capacity Constraints & Deliveries"):
     st.markdown("The delivery plan respects the store capacity limits:")
+
