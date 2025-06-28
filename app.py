@@ -3,7 +3,11 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 
-st.title("TV Delivery Optimizer (using SciPy)")
+st.title("TV Delivery Optimizer")
+
+st.markdown("""
+**A company wishes to minimise its costs of delivering televisions from three depots (D1, D2 and D3) to three stores (Store 1, Store 2, and Store 3). [Source](https://www.accaglobal.com/uk/en/student/exam-support-resources/professional-exams-study-resources/strategic-business-leader/technical-articles/big-data-sbl.html)**
+""")
 
 st.markdown("## Problem Setup")
 
@@ -83,9 +87,3 @@ with st.expander("📐 Show Linear Programming Model"):
 # Store capacity validation with delivered values
 with st.expander("📦 Store Capacity Constraints & Deliveries"):
     st.markdown("The delivery plan respects the store capacity limits:")
-
-    st.latex(r"\text{Store 1:} \quad x_{11} + x_{21} + x_{31} = 2000 \leq 2000")
-    st.latex(r"\text{Store 2:} \quad x_{12} + x_{22} + x_{32} = 2850 \leq 3000")
-    st.latex(r"\text{Store 3:} \quad x_{13} + x_{23} + x_{33} = 2000 \leq 2000")
-
-    st.markdown("✅ All total deliveries are within or equal to capacity constraints.")
