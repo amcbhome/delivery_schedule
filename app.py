@@ -101,20 +101,3 @@ if res.success:
 else:
     st.error("❌ Optimization failed: " + res.message)
 
-# LP Model Explanation
-with st.expander("📐 Show Linear Programming Model"):
-    st.latex(r"\text{Minimize:} \quad Z = \sum_{i=1}^{3} \sum_{j=1}^{3} x_{ij} \cdot d_{ij} \cdot 5")
-    st.markdown("Where:")
-    st.markdown("- \( x_{ij} \): Number of TVs delivered from depot \( i \) to store \( j \)")
-    st.markdown("- \( d_{ij} \): Distance in miles between depot \( i \) and store \( j \)")
-    st.markdown("- Cost per mile = £5")
-    st.latex(r"\text{Subject to:}")
-    st.latex(r"\sum_{i=1}^{3} x_{ij} \leq \text{Capacity}_j \quad \text{for each store } j")
-    st.latex(r"\sum_{j=1}^{3} x_{ij} = \text{Supply}_i \quad \text{for each depot } i")
-    st.latex(r"x_{ij} \geq 0 \quad \text{and continuous}")
-
-# Constraint Check
-with st.expander("📦 Store Capacity Constraints & Deliveries"):
-    st.markdown("The delivery plan respects the store capacity limits.")
-
-
