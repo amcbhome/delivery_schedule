@@ -2,6 +2,7 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
+import matplotlib.pyplot as plt
 
 st.title("TV Delivery Optimizer")
 
@@ -11,32 +12,59 @@ st.markdown("""
 
 st.markdown("## Problem Setup")
 
+# Depot and Store Data
+depot_labels = ["D1", "D2", "D3"]
+depot_supply = [2500, 3100, 1250]
+store_labels = ["Store 1", "Store 2", "Store 3"]
+store_caps = [2000, 3000, 2000]
+
+st.markdown("### TV Delivery Data")
+st.write("**TVs available at each depot:**")
+st.table(pd.DataFrame({"Depot": depot_labels, "TVs Available": depot_supply}))
+
+st.write("**Store capacity constraints:**")
+st.table(pd.DataFrame({"Store": store_labels, "Capacity": store_caps}))
+
+# Bar Chart – Depot TV Supply
+st.markdown("### 📦 Depot TV Supply")
+fig1, ax1 = plt.subplots()
+ax1.bar(depot_labels, depot_supply)
+ax1.set_ylabel("TVs Available")
+ax1.set_title("TVs Available at Each Depot")
+st.pyplot(fig1)
+
+# Bar Chart – Store Capacity
+st.markdown("### 🏬 Store Capacity Limits")
+fig2, ax2 = plt.subplots()
+ax2.bar(store_labels, store_caps, color="orange")
+ax2.set_ylabel("TVs Capacity")
+ax2.set_title("Maximum TVs Each Store Can Accept")
+st.pyplot(fig2)
+
+# Cost per mile
 cost_per_mile = 5
 
-# Distances in miles from depots (rows) to stores (columns)
+# Distance Matrix
 distances = np.array([
     [22, 33, 40],  # D1 to Stores 1–3
-    [27, 30, 22],  # D2 to Stores 1–3 (corrected)
+    [27, 30, 22],  # D2 to Stores 1–3
     [36, 20, 25],  # D3 to Stores 1–3
 ])
+
 st.write("### Distance Matrix (miles)")
-st.dataframe(pd.DataFrame(distances, index=["D1", "D2", "D3"], columns=["Store 1", "Store 2", "Store 3"]))
+st.dataframe(pd.DataFrame(distances, index=depot_labels, columns=store_labels))
 
 # Flatten distance matrix and apply cost multiplier
 c = (distances * cost_per_mile).flatten()
 
-# Store capacity constraints (upper bounds)
-store_caps = [2000, 3000, 2000]  # S1, S2, S3
-
+# Constraints for stores (upper bounds)
 A_store = np.zeros((3, 9))
 for j in range(3):  # for each store
     for i in range(3):  # for each depot
         A_store[j, 3*i + j] = 1
 b_store = store_caps
 
-# Depot supply constraints (equality)
-depot_supply = [2500, 3100, 1250]  # D1, D2, D3
-
+# Constraints for depots (equality)
 A_depot = np.zeros((3, 9))
 for i in range(3):  # for each depot
     A_depot[i, 3*i : 3*i+3] = 1
@@ -60,7 +88,7 @@ st.markdown("## Optimization Results")
 
 if res.success:
     x = np.round(res.x).astype(int).reshape(3, 3)
-    shipment_df = pd.DataFrame(x, index=["D1", "D2", "D3"], columns=["Store 1", "Store 2", "Store 3"])
+    shipment_df = pd.DataFrame(x, index=depot_labels, columns=store_labels)
     st.write("### Optimized TV Shipment Plan")
     st.dataframe(shipment_df)
 
@@ -70,20 +98,18 @@ if res.success:
 else:
     st.error("Optimization failed: " + res.message)
 
-# LP model explanation
+# LP Model Explanation
 with st.expander("📐 Show Linear Programming Model"):
     st.latex(r"\text{Minimize:} \quad Z = \sum_{i=1}^{3} \sum_{j=1}^{3} x_{ij} \cdot d_{ij} \cdot 5")
-
     st.markdown("Where:")
     st.markdown("- \( x_{ij} \): Number of TVs delivered from depot \( i \) to store \( j \)")
     st.markdown("- \( d_{ij} \): Distance in miles between depot \( i \) and store \( j \)")
     st.markdown("- Cost per mile = £5")
-
     st.latex(r"\text{Subject to:}")
     st.latex(r"\sum_{i=1}^{3} x_{ij} \leq \text{Capacity}_j \quad \text{for each store } j")
     st.latex(r"\sum_{j=1}^{3} x_{ij} = \text{Supply}_i \quad \text{for each depot } i")
     st.latex(r"x_{ij} \geq 0 \quad \text{and continuous}")
 
-# Store capacity validation with delivered values
+# Constraint Check
 with st.expander("📦 Store Capacity Constraints & Deliveries"):
     st.markdown("The delivery plan respects the store capacity limits:")
