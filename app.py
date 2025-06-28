@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 
 st.title("TV Delivery Optimizer")
 
@@ -20,11 +19,20 @@ store_labels = ["Store 1", "Store 2", "Store 3"]
 store_caps = [2000, 3000, 2000]
 
 st.markdown("### TV Delivery Data")
-st.write("**TVs available at each depot:**")
-st.table(pd.DataFrame({"Depot": depot_labels, "TVs Available": depot_supply}))
 
-st.write("**Store capacity constraints:**")
-st.table(pd.DataFrame({"Store": store_labels, "Capacity": store_caps}))
+# Depot table
+st.markdown("**TVs available at each depot:**", unsafe_allow_html=True)
+st.markdown(pd.DataFrame({
+    "Depot": depot_labels,
+    "TVs Available": depot_supply
+}).to_html(index=False, justify='center'), unsafe_allow_html=True)
+
+# Store table
+st.markdown("**Store capacity constraints:**", unsafe_allow_html=True)
+st.markdown(pd.DataFrame({
+    "Store": store_labels,
+    "Capacity": store_caps
+}).to_html(index=False, justify='center'), unsafe_allow_html=True)
 
 # Cost per mile
 cost_per_mile = 5
@@ -36,8 +44,12 @@ distances = np.array([
     [36, 20, 25],  # D3 to Stores 1–3
 ])
 
-st.write("### Distance Matrix (miles)")
-st.dataframe(pd.DataFrame(distances, index=depot_labels, columns=store_labels))
+st.markdown("### Distance Matrix (miles)")
+distance_df = pd.DataFrame(distances, index=depot_labels, columns=store_labels)
+st.markdown(distance_df.style.set_table_styles([
+    {'selector': 'th', 'props': [('text-align', 'center')]},
+    {'selector': 'td', 'props': [('text-align', 'center')]}
+]).to_html(), unsafe_allow_html=True)
 
 # Flatten distance matrix and apply cost multiplier
 c = (distances * cost_per_mile).flatten()
@@ -75,44 +87,13 @@ if res.success:
     x = np.round(res.x).astype(int).reshape(3, 3)
     shipment_df = pd.DataFrame(x, index=depot_labels, columns=store_labels)
     st.write("### Optimized TV Shipment Plan")
-    st.dataframe(shipment_df)
+    st.markdown(shipment_df.style.set_table_styles([
+        {'selector': 'th', 'props': [('text-align', 'center')]},
+        {'selector': 'td', 'props': [('text-align', 'center')]}
+    ]).to_html(), unsafe_allow_html=True)
 
     total_cost = res.fun
     st.write(f"### Total Delivery Cost: £{total_cost:,.2f}")
-
-    # Sankey Diagram
-    st.markdown("### 🔄 Shipment Flow Diagram (Sankey)")
-
-    labels = depot_labels + store_labels
-    source = []
-    target = []
-    value = []
-
-    for i in range(3):  # depots
-        for j in range(3):  # stores
-            flow = x[i][j]
-            if flow > 0:
-                source.append(i)
-                target.append(3 + j)
-                value.append(flow)
-
-    fig = go.Figure(data=[go.Sankey(
-        node=dict(
-            pad=15,
-            thickness=20,
-            line=dict(color="black", width=0.5),
-            label=labels,
-            color="blue"
-        ),
-        link=dict(
-            source=source,
-            target=target,
-            value=value,
-            color="lightblue"
-        ))])
-
-    fig.update_layout(title_text="TV Shipments: Depot to Store Flow", font_size=12)
-    st.plotly_chart(fig, use_container_width=True)
 
 else:
     st.error("Optimization failed: " + res.message)
@@ -131,5 +112,5 @@ with st.expander("📐 Show Linear Programming Model"):
 
 # Constraint Check
 with st.expander("📦 Store Capacity Constraints & Deliveries"):
-    st.markdown("The delivery plan respects the store capacity limits:")
+    st.markdown("The delivery plan respects the store capacity limits.")
 
