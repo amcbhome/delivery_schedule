@@ -97,7 +97,7 @@ if res.success:
     ]).to_html(), unsafe_allow_html=True)
 
     total_cost = res.fun
-    st.write(f"### 💰 Total Delivery Cost: £{total_cost:,.2f}")
+    st.write(f"### 💰 Total Delivery Cost: £{total_cost:,.0f}")
 
 else:
     st.error("❌ Optimization failed: " + res.message)
